@@ -1,0 +1,41 @@
+---
+- name: execute list of commands for tomact configuration
+  shell: |
+      yum -y install epel-release
+      yum -y update
+      yum install java-1.8.0-openjdk -y
+      java -version
+      useradd -r tomcat
+      mkdir /usr/local/tomcat9
+      cd /usr/local/tomcat9
+      curl -o tomcat9.tar.gz https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.55/bin/apache-tomcat-9.0.55.tar.gz
+      tar -xvf tomcat9.tar.gz
+      chown -R tomcat:tomcat /usr/local/tomcat9
+      echo "export CATALINA_HOME="/usr/local/tomcat9"" >> ~/.bashrc
+      source ~/.bashrc	  
+- name: create tomact.service file with content
+  copy:
+    dest: "/etc/systemd/system/tomcat.service"
+    content: |
+     [Unit]
+     Description=Apache Tomcat Server
+     After=syslog.target network.target
+     [Service]
+     Type=forking
+     User=tomcat
+     Group=tomcat
+     Environment=CATALINA_PID=/usr/local/tomcat9/apache-tomcat-9.0.55/temp/tomcat.pid
+     Environment=CATALINA_HOME=/usr/local/tomcat9/apache-tomcat-9.0.55
+     Environment=CATALINA_BASE=/usr/local/tomcat9/apache-tomcat-9.0.55
+     ExecStart=/usr/local/tomcat9/apache-tomcat-9.0.55/bin/catalina.sh start
+     ExecStop=/usr/local/tomcat9/apache-tomcat-9.0.55/bin/catalina.sh stop
+     RestartSec=10
+     Restart=always
+     [Install]
+     WantedBy=multi-user.target	
+- name: reload daemon
+  command: systemctl daemon-reload
+- name: start tomact service
+  command: systemctl start tomcat.service
+- name: enable tomact service
+  command: systemctl enable tomcat.service

@@ -1,0 +1,5 @@
+---
+- name: update os
+  command: yum update -y
+- name: install maven
+  command: yum install maven -y
